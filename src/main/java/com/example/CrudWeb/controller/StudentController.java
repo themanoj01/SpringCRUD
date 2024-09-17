@@ -1,5 +1,7 @@
 package com.example.CrudWeb.controller;
 
+import com.example.CrudWeb.exception.GlobalExceptionHandler;
+import com.example.CrudWeb.exception.StudentNotFoundException;
 import com.example.CrudWeb.model.Student;
 import com.example.CrudWeb.service.StudentService;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,19 @@ public class StudentController {
         return "students";
     }
 
+    @GetMapping("/details/{id}")
+    public String getStudentById(@PathVariable Long id, Model model) {
+        try{
+            Student student = studentService.getStudentById(id);
+            model.addAttribute("student", student);
+            return "student_detail";
+        }
+        catch(StudentNotFoundException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "error_page";
+        }
+    }
+
     // to show new form for creating students
     @GetMapping("/new")
     public String createStudent(Model model) {
@@ -31,28 +46,42 @@ public class StudentController {
 
     // save a new student and redirecting to student page
     @PostMapping
-    public String saveStudent(@ModelAttribute("student") Student student) {
-        studentService.addStudent(student);
-        return "redirect:/students";
+    public String saveStudent(Model model,@ModelAttribute("student") Student student) {
+        try{
+            studentService.addStudent(student);
+            return "redirect:/students";
+        }
+        catch(RuntimeException e){
+            model.addAttribute("errorMessage", e.getMessage());
+            return "create_student";
+        }
+
     }
 
     // to display form for editing existing student
     @GetMapping("/edit/{id}")
     public String editStudent(@PathVariable Long id, Model model) {
-        model.addAttribute("student", studentService.getStudentById(id));
-        return "edit_student";
+        try{
+            model.addAttribute("student", studentService.getStudentById(id));
+            return "edit_student";
+        }
+        catch(StudentNotFoundException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "error_page";
+        }
+
     }
 
-    //Post request to update and existing student
+    //Post request to update an existing student
     @PostMapping("/{id}")
-    public String updateStudent(@PathVariable Long id, @ModelAttribute("student") Student student) {
-        Student existingStudent = studentService.getStudentById(id);
-        existingStudent.setId(id);
-        existingStudent.setName(student.getName());
-        existingStudent.setAge(student.getAge());
-        existingStudent.setEmail(student.getEmail());
-        studentService.updateStudent(existingStudent);
-        return "redirect:/students";
+    public String updateStudent(Model model,@PathVariable Long id, @ModelAttribute("student") Student student) {
+            Student existingStudent = studentService.getStudentById(id);
+            existingStudent.setId(id);
+            existingStudent.setName(student.getName());
+            existingStudent.setAge(student.getAge());
+            existingStudent.setEmail(student.getEmail());
+            studentService.updateStudent(existingStudent);
+            return "redirect:/students";
     }
 
     //request to delete a student
