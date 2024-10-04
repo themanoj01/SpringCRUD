@@ -4,6 +4,7 @@ import com.example.CrudWeb.exception.GlobalExceptionHandler;
 import com.example.CrudWeb.exception.StudentNotFoundException;
 import com.example.CrudWeb.model.Student;
 import com.example.CrudWeb.service.StudentService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,11 @@ public class StudentController {
     private final StudentService studentService;
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
+    }
+
+    @GetMapping("/home")
+    public String home(Model model) {
+        return "home";
     }
 
     // to retrieve list of students
@@ -46,6 +52,7 @@ public class StudentController {
 
     // save a new student and redirecting to student page
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String saveStudent(Model model,@ModelAttribute("student") Student student) {
         try{
             studentService.addStudent(student);
@@ -74,6 +81,7 @@ public class StudentController {
 
     //Post request to update an existing student
     @PostMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String updateStudent(Model model,@PathVariable Long id, @ModelAttribute("student") Student student) {
             Student existingStudent = studentService.getStudentById(id);
             existingStudent.setId(id);
@@ -86,6 +94,7 @@ public class StudentController {
 
     //request to delete a student
     @GetMapping("/delete/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public String deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
         return "redirect:/students";
